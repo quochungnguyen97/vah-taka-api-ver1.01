@@ -1,13 +1,13 @@
 const User = require('../models/User');
 const Order = require('../models/Order');
-const Item = require('../models/Item');
+const Item = require('../models/Item').Item;
 const bcrypt = require('bcrypt');
 
 // order controller
 // role: own user
 const order = (req, res, next) => {
   const {username, password} = req.body.user;
-  const {orderId} = req.body;
+  console.log(username);
 
   User.findOne({
     username
@@ -15,28 +15,41 @@ const order = (req, res, next) => {
     if (user) {
 
       if (bcrypt.compareSync(password, user.password)) {
-        Order.findById(orderId).then(order => {
-          if (order) {
-            if (order.status === "CART") {
-              order.status = "ORDERED";
-              if (order.items.length === 0) {
-                res.status(402).send();
-              } else {
-                order.save(err => {
-                  if (err) res.status(402).send();
-                  else {
-                    Order.create({
-                      ofUser: user._id
-                    }).then(ord => {
-                      if (ord) {
-                        res.send(order);
-                      } else res.status(402).send();
-                    }).catch(next);
-                  }
-                });
-              }   
-            } else res.status(402).send();
-          } else res.status(402).send();
+        Order.find({ofUser: user._id}).then(orders => {
+
+          if (orders) {
+            let cartId = "";
+            orders.forEach(order => {
+              if (order.status === "CART") {
+                cartId = order._id;
+              }
+            });
+
+            Order.findById({_id: cartId}).then(order => {
+              if (order) {
+                if (order.status === "CART") {
+                  order.status = "ORDERED";
+                  if (order.items.length === 0) {
+                    res.status(402).send();
+                  } else {
+                    order.save(err => {
+                      if (err) res.status(402).send();
+                      else {
+                        Order.create({
+                          ofUser: user._id
+                        }).then(ord => {
+                          if (ord) {
+                            res.send(order);
+                          } else res.status(402).send();
+                        }).catch(next);
+                      }
+                    });
+                  }   
+                } else res.status(402).send();
+              } else res.status(402).send();
+            }).catch(next);
+          }
+          
         }).catch(next);
 
       } else res.status(401).send();
@@ -140,11 +153,19 @@ const checked = (req, res, next) => {
     if (user) {
       if (bcrypt.compareSync(password, user.password) && user.role == "Ad" ) {
 
-        Order.findByIdAndUpdate({_id: req.params.id}, {status: "CHECKED"}).then(order => {
-          if (order) {
-            res.send(order);
+        Order.findById({_id: req.params.id}).then(o => {
+          if (o) {
+            if (o.status === "ORDERED") {
+              Order.findByIdAndUpdate({_id: req.params.id}, {status: "CHECKED"}).then(order => {
+                if (order) {
+                  res.send(order);
+                } else res.status(402).send();
+              }).catch(next);
+            } else res.status(402).send();
+            
           } else res.status(402).send();
         }).catch(next);
+        
       } else res.status(401).send();
     } else res.status(400).send();
   }).catch(next);
@@ -193,12 +214,13 @@ const addToCart = (req, res, next) => {
               }
             });
 
-            Order.findById({_id: cartId}).then(order => {
+            Order.findById({_id: cartId}).then(order => {              
+              
               if (order) {
                 Item.findById({_id: itemId}).then(item => {
-  
+                  //console.log(item._id);
                   if (item.number >= number) {
-    
+                    item.number -= number;
                     item.save(err => {
                       if (err) res.status(402).send();
                       else {
@@ -208,15 +230,14 @@ const addToCart = (req, res, next) => {
                             if (it._id.equals(item._id)) it.number += number;
                             return it;
                           })
-                        } 
-                        else {
+                        } else {
                           item.number = number;
                           order.items.push(item);
                         }
     
                         order.save(err => {
                           if (err) res.status(402).send();
-                          else res.send(user);
+                          else res.send(order);
                         })
                       }
                     })

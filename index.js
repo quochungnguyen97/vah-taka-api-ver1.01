@@ -3,6 +3,8 @@ const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
 
 const app = express();
+const cors = require('cors');
+
 
 // img url
 app.use('/asserts', express.static('asserts'));
@@ -14,12 +16,7 @@ mongoose.connect('mongodb://admin:hung123@ds012889.mlab.com:12889/vahdb', {useNe
 mongoose.Promise = global.Promise;
 
 // some middlewares
-app.use(function(req, res, next){
-  res.header('Access-Control-Allow-Origin', "*");
-  res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE');
-  res.header('Access-Control-Allow-Headers', 'Content-Type');
-  next();
-});
+app.use(cors());
 
 app.use(bodyParser.json());
 

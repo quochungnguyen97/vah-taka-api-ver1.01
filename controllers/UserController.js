@@ -30,6 +30,7 @@ const register = (req, res, next) => {
 // login controller
 // role: everyone
 const login = (req, res, next) => {
+  //console.log('logged');
   User.findOne({
     username: req.body.username
   }).then(user => {
