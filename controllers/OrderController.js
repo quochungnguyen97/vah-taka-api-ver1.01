@@ -177,43 +177,54 @@ const createCart = (req, res, next) => {
 // role: own user
 const addToCart = (req, res, next) => {
   const {username, password} = req.body.user;
-  const {itemId, cartId, number} = req.body;
+  const {itemId, number} = req.body;
 
   User.findOne({username}).then(user => {
     if (user) {
       if (bcrypt.compareSync(password, user.password)) {
 
-        Order.findOne({_id: cartId}).then(order => {
-          if (order) {
-            if (user._id.equals(order.ofUser)){
-              Item.findOne({_id: itemId}).then(item => {
+        Order.find({ofUser: user._id}).then(orders => {
+          if (orders) {
+            let cartId = "";
 
-                if (item.number >= number) {
+            orders.forEach(order => {
+              if (order.status === "CART") {
+                cartId = order._id;
+              }
+            });
+
+            Order.findById({_id: cartId}).then(order => {
+              if (order) {
+                Item.findById({_id: itemId}).then(item => {
   
-                  item.save(err => {
-                    if (err) res.status(402).send();
-                    else {
-  
-                      if (order.items.findIndex(it => it._id.equals(item._id)) != -1) {
-                        order.items.filter(it => {
-                          if (it._id.equals(item._id)) it.number += number;
-                          return it;
-                        })
-                      } 
+                  if (item.number >= number) {
+    
+                    item.save(err => {
+                      if (err) res.status(402).send();
                       else {
-                        item.number = number;
-                        user.cart.push(item);
+    
+                        if (order.items.findIndex(it => it._id.equals(item._id)) != -1) {
+                          order.items.filter(it => {
+                            if (it._id.equals(item._id)) it.number += number;
+                            return it;
+                          })
+                        } 
+                        else {
+                          item.number = number;
+                          order.items.push(item);
+                        }
+    
+                        order.save(err => {
+                          if (err) res.status(402).send();
+                          else res.send(user);
+                        })
                       }
-  
-                      user.save(err => {
-                        if (err) res.status(402).send();
-                        else res.send(user);
-                      })
-                    }
-                  })
-                } else res.status(402).send();
-              }).catch(next);
-            }
+                    })
+                  } else res.status(402).send();
+                }).catch(next);
+              } else res.status(402).send();
+            }).catch(next);
+            
           } else res.status(402).send();
         })
 
