@@ -7,7 +7,7 @@ const cors = require('cors');
 
 
 // img url
-app.use('/asserts', express.static('asserts'));
+app.use('/', express.static('asserts'));
 
 // connect to mongodb
 // mongoose.connect('mongodb://localhost:27017/test', {useNewUrlParser: true});
