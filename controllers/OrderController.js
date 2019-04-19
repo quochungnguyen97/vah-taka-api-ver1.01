@@ -58,6 +58,27 @@ const order = (req, res, next) => {
   }).catch(next);
 }
 
+// get cart of user
+// role: own user
+const getCart = (req, res, next) => {
+  const {username, password} = req.body;
+  
+  User.findOne({
+    username
+  }).then(user => {
+    if (user) {
+      if (bcrypt.compareSync(password, user.password)){        
+        Order.findOne({ofUser: user._id, status: "CART"}).then(order => {
+          if (order) {
+            res.send(order);
+          } else res.status(402).send();
+        }).catch(next);
+
+      } else res.status(401).send();
+    } else res.status(400).send();
+  }).catch(next);
+}
+
 // get all orders controller
 // role: Ad
 const getAll = (req, res, next) => {
@@ -263,7 +284,8 @@ const orderController = {
   checked, 
   addToCart,
   createCart,
-  getOrdersOfUser
+  getOrdersOfUser,
+  getCart
 };
 
 module.exports = orderController;

@@ -51,4 +51,10 @@ router.post('/of_user/:id', (req, res, next) => {
   orderController.getOrdersOfUser(req, res, next);
 })
 
+// get cart
+// role: own user
+router.post('/cart', (req, res, next) => {
+  orderController.getCart(req, res, next);
+})
+
 module.exports = router;
