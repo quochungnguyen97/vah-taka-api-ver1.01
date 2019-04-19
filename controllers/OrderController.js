@@ -255,6 +255,9 @@ const addToCart = (req, res, next) => {
                           item.number = number;
                           order.items.push(item);
                         }
+
+                        order.total += number * item.price;
+                        // console.log(number+" "+item.price);
     
                         order.save(err => {
                           if (err) res.status(402).send();
