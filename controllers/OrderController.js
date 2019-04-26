@@ -32,18 +32,41 @@ const order = (req, res, next) => {
                   if (order.items.length === 0) {
                     res.status(402).send();
                   } else {
-                    order.save(err => {
-                      if (err) res.status(402).send();
-                      else {
-                        Order.create({
-                          ofUser: user._id
-                        }).then(ord => {
-                          if (ord) {
-                            res.send(order);
-                          } else res.status(402).send();
-                        }).catch(next);
-                      }
-                    });
+
+                    Item.find({}).then(items => {
+                      let check = true;
+                      order.items.forEach(item => {
+                        if (items.find(i => i._id.equals(item._id)).number >= item.number) {
+                          items = items.map(i => {
+                            if (i._id === item._id) {
+                              i.number -= item.number;
+                            }
+                            return i;
+                          })
+                        } else {
+                          check = false;
+                          break;
+                        }                        
+                      });
+
+                      if (check) {
+                        order.save(err => {
+                          if (err) res.status(402).send();
+                          else {
+                            Order.create({
+                              ofUser: user._id
+                            }).then(ord => {
+                              if (ord) {
+                                items.save(err => {
+                                  if (err) res.status(402).send();
+                                  else res.send(order);
+                                })
+                              } else res.status(402).send();
+                            }).catch(next);
+                          }
+                        });
+                      } else res.status(402).send();
+                    }).catch(next);                    
                   }   
                 } else res.status(402).send();
               } else res.status(402).send();
@@ -240,32 +263,41 @@ const addToCart = (req, res, next) => {
               if (order) {
                 Item.findById({_id: itemId}).then(item => {
                   //console.log(item._id);
-                  if (item.number >= number) {
-                    item.number -= number;
-                    item.save(err => {
-                      if (err) res.status(402).send();
-                      else {
-    
-                        if (order.items.findIndex(it => it._id.equals(item._id)) != -1) {
-                          order.items.filter(it => {
-                            if (it._id.equals(item._id)) it.number += number;
-                            return it;
-                          })
-                        } else {
-                          item.number = number;
-                          order.items.push(item);
-                        }
+                  item.number = number;
+                  
+                  order.total += number * item.price;
 
-                        order.total += number * item.price;
-                        // console.log(number+" "+item.price);
+                  order.save(err => {
+                    if (err) res.status(402).send();
+                    else res.send(order);
+                  })
+
+                  // if (item.number >= number) {
+                  //   item.number -= number;
+                  //   item.save(err => {
+                  //     if (err) res.status(402).send();
+                  //     else {
     
-                        order.save(err => {
-                          if (err) res.status(402).send();
-                          else res.send(order);
-                        })
-                      }
-                    })
-                  } else res.status(402).send();
+                  //       if (order.items.findIndex(it => it._id.equals(item._id)) != -1) {
+                  //         order.items.filter(it => {
+                  //           if (it._id.equals(item._id)) it.number += number;
+                  //           return it;
+                  //         })
+                  //       } else {
+                  //         item.number = number;
+                  //         order.items.push(item);
+                  //       }
+
+                  //       order.total += number * item.price;
+                  //       // console.log(number+" "+item.price);
+    
+                  //       order.save(err => {
+                  //         if (err) res.status(402).send();
+                  //         else res.send(order);
+                  //       })
+                  //     }
+                  //   })
+                  // } else res.status(402).send();
                 }).catch(next);
               } else res.status(402).send();
             }).catch(next);
