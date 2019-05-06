@@ -44,9 +44,13 @@ router.get('/get_by_category/:type', (req, res, next) => {
 })
 
 // best selling
-router.get('/best_selling', (req, res, next) => {
-  console.log("bb");
+router.get('/best_selling/:num', (req, res, next) => {
   itemController.bestSelling(req, res, next);
+})
+
+// new items
+router.get('/new_items/:num', (req, res, next) => {
+  itemController.newItems(req, res, next);
 })
 
 module.exports = router;

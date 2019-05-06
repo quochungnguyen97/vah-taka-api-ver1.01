@@ -6,8 +6,9 @@ const bcrypt = require('bcrypt');
 // get best selling
 // role: everyone
 const bestSelling = (req, res, next) => {
+  const {num} = req.params;
   Order.find({}).then(orders => {
-    const listItems = [];
+    let listItems = [];
     orders = orders.filter(order => order.status !== "CART");
 
     orders.forEach(order => {
@@ -34,10 +35,37 @@ const bestSelling = (req, res, next) => {
         // console.log(listItems);
       })
     });
+    
+    const n = listItems.length < num ? listItems.length : num;
+    console.log(n);
 
-    res.send(listItems);
+    listItems.sort((a, b) => b.number - a.number);
+
+    let sendItems = [];
+
+    for (let i = 0; i < n; i++) sendItems.push(listItems[i]);
+
+    res.send(sendItems);
   }).catch(next);
 } 
+
+// new items
+// role: everyone
+const newItems = (req, res, next) => {
+  const {num} = req.params;
+  Item.find({}).then(items => {
+    if (items) {
+      let sendItems = [];
+      const n = items.length < num ? listItems.length : num;
+
+      for (let i = 0; i < n; i++) {
+        sendItems.push(items[items.length - 1 - i]);
+      }
+
+      res.send(sendItems);
+    } else res.status(400).send();
+  }).catch(next);
+}
 
 // get all items controller
 // role: everyone
@@ -154,7 +182,8 @@ const itemController = {
   update,
   _delete,
   bestSelling,
-  getByType
+  getByType,
+  newItems
 };
 
 module.exports = itemController;
