@@ -33,4 +33,9 @@ router.post('/update_password', (req, res, next) => {
   userController.updatePassword(req, res, next);
 });
 
+// get user
+router.post('/get_user', (req, res, next) => {
+  userController.getUser(req, res, next);
+})
+
 module.exports = router;

@@ -142,22 +142,38 @@ const order = (req, res, next) => {
 // get cart of user
 // role: own user
 const getCart = (req, res, next) => {
-  const {username, password} = req.body;
-  
-  User.findOne({
-    username
-  }).then(user => {
-    if (user) {
-      if (bcrypt.compareSync(password, user.password)){        
+  const {userId, type} = req.body;
+
+  if (type === "NORMAL") {
+    User.findOne({
+      _id: userId
+    }).then(user => {
+      if (user) {     
         Order.findOne({ofUser: user._id, status: "CART"}).then(order => {
           if (order) {
             res.send(order);
           } else res.status(402).send();
         }).catch(next);
+  
+      } else res.status(400).send();
+    }).catch(next);
+  } else {
 
-      } else res.status(401).send();
-    } else res.status(400).send();
-  }).catch(next);
+    FBUser.findOne({
+      fbId: userId
+    }).then(user => {
+      if (user) {     
+        Order.findOne({ofUser: user._id, status: "CART"}).then(order => {
+          if (order) {
+            res.send(order);
+          } else res.status(402).send();
+        }).catch(next);
+  
+      } else res.status(400).send();
+    }).catch(next);
+  }
+  
+  
 }
 
 // get all orders controller

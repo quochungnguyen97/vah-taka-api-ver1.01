@@ -28,10 +28,32 @@ const register = (req, res, next) => {
   }).catch(next);
 }
 
+// get userinfo
+// role: own user
+const getUser = (req, res, next) => {
+  const {userId, type} = req.body;
+
+  if (type === "NORMAL") {
+    User.findOne({_id: userId}).then(user => {
+      if (user) {
+        res.send(user);
+      } else res.status(400).send();
+    }).catch(next);
+  } else {
+    FBUser.findOne({fbId: userId}).then(user => {
+      if (user) {
+        res.send(user);
+      } else res.status(400).send();
+    }).catch(next);
+  }
+}
+
 // login controller
 // role: everyone
 const login = (req, res, next) => {
   const {type, userId, avatar,name,  username, password} = req.body;
+
+  console.log(req.body);
 
   if (type == "NORMAL") {
     User.findOne({
@@ -52,7 +74,17 @@ const login = (req, res, next) => {
       fbId: userId
     }).then(user => {
       if (user) {
-        res.send(user);
+        if (user.avatar !== avatar || user.name !== name) {
+          FBUser.findOneAndUpdate({fbId: userId},{
+            avatar,
+            name
+          }).then(() => {
+            console.log("updated");
+            FBUser.findOne({fbId: userId}).then(u => {
+              res.send(u);
+            }).catch(next);
+          }).catch(next);
+        } else res.send(user);
       } else {
         FBUser.create({
           fbId: userId,
@@ -142,7 +174,8 @@ const userController = {
   login,
   _delete,
   update,
-  updatePassword
+  updatePassword,
+  getUser
 }
 
 module.exports = userController;
