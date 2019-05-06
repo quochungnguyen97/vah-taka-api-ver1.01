@@ -125,27 +125,28 @@ const _delete = (req, res, next) => {
 // update controller
 // role: own user
 const update = (req, res, next) => {
-  const {password} = req.body;
+  const _id = req.params.id;
   
+  delete req.body.username;
   delete req.body.password;
   delete req.body.role;
 
-  User.findOne({
-    username: req.body.username,
-    _id: req.params.id
-  }).then(user => {
-    // console.log(password);
-    if (bcrypt.compareSync(password, user.password)) {
+  console.log(req.params.id);
 
-      // console.log("pass");
-      User.findByIdAndUpdate({_id: user._id}, req.body)
-        .then(u => {
-          res.send({...u, password});
-        }).catch(next);
-
-    } else res.status(400).send();
-
+  User.findByIdAndUpdate({_id}, req.body)
+  .then(user => {
+    if (user) {
+      User.findById({_id}).then(u =>{
+        if (u) {
+          console.log(u);
+          res.send(u);
+        } else res.status(401).send();
+      }).catch(next);
+    }
+    else res.status(400).send();
   }).catch(next);
+
+
 }
 
 // update password

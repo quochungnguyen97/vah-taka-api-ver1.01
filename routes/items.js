@@ -14,7 +14,7 @@ router.get('/search/:kw', (req, res, next) => {
 })
 
 // get an item by id
-router.get('/:id', (req, res, next) => {
+router.get('/item/:id', (req, res, next) => {
   itemController.getById(req, res, next);
 })
 
@@ -41,6 +41,12 @@ router.post('/add_to_cart/:id', (req, res, next) => {
 // get by type
 router.get('/get_by_category/:type', (req, res, next) => {
   itemController.getByType(req, res, next);
+})
+
+// best selling
+router.get('/best_selling', (req, res, next) => {
+  console.log("bb");
+  itemController.bestSelling(req, res, next);
 })
 
 module.exports = router;

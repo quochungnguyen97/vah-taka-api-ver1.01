@@ -57,4 +57,9 @@ router.post('/cart', (req, res, next) => {
   orderController.getCart(req, res, next);
 })
 
+// delete from cart
+router.put('/delete_from_cart/:itemId', (req, res, next) => {
+  orderController.deleteItemFromCart(req, res, next);
+})
+
 module.exports = router;

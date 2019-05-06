@@ -20,7 +20,13 @@ const OrderSchema = new Schema({
     type: Date,
     default: Date.now
   },
+  fullName: {
+    type: String
+  },
   address: {
+    type: String
+  },
+  phone: {
     type: String
   },
   payment: {

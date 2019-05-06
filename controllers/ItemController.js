@@ -1,7 +1,43 @@
 const Item = require('../models/Item').Item;
 const User = require('../models/User');
+const Order = require('../models/Order');
 const bcrypt = require('bcrypt');
 
+// get best selling
+// role: everyone
+const bestSelling = (req, res, next) => {
+  Order.find({}).then(orders => {
+    const listItems = [];
+    orders = orders.filter(order => order.status !== "CART");
+
+    orders.forEach(order => {
+      order.items.forEach(item => {
+        // console.log(item._id);
+        let check = false;
+        // console.log(listItems);
+        if (listItems.length != 0){
+          listItems = listItems.map(it => {
+            console.log(it._id, item._id);
+            if (it._id === item._id) {
+              console.log("equal");
+              it.number += item.number;
+              check = true;
+            }
+            console.log("pass");
+            return it;
+          })
+        }
+
+        if (!check) {
+          listItems.push(item);
+        }
+        // console.log(listItems);
+      })
+    });
+
+    res.send(listItems);
+  }).catch(next);
+} 
 
 // get all items controller
 // role: everyone
@@ -14,12 +50,14 @@ const getAll = (req, res, next) => {
 // search item controller
 // role: everyone
 const search = (req, res, next) => {
+  console.log(req.params.kw);
   Item.find({
     name: {
       $regex: req.params.kw,
       $options: 'i'
     }
   }).then(items => {
+    console.log(items.length);
     if (items) res.send(items);
     else res.status(400).send();
   }).catch(next);
@@ -115,6 +153,7 @@ const itemController = {
   search,
   update,
   _delete,
+  bestSelling,
   getByType
 };
 
