@@ -45,7 +45,6 @@ const order = (req, res, next) => {
                           })
                         } else {
                           check = false;
-                          break;
                         }                        
                       });
 
