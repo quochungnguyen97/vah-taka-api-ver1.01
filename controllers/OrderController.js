@@ -1,4 +1,5 @@
 const User = require('../models/User');
+const FBUser = require('../models/FBUser');
 const Order = require('../models/Order');
 const Item = require('../models/Item').Item;
 const bcrypt = require('bcrypt');
@@ -298,74 +299,101 @@ const createCart = (req, res, next) => {
 // add to cart
 // role: own user
 const addToCart = (req, res, next) => {
-  const {username, password} = req.body.user;
-  const {itemId, number} = req.body;
+  const {itemId, number, userId, type} = req.body;
 
-  User.findOne({username}).then(user => {
-    if (user) {
-      if (bcrypt.compareSync(password, user.password)) {
-
-        Order.find({ofUser: user._id}).then(orders => {
+  if (type == "NORMAL") {
+    User.findOne({_id: userId}).then(user => {
+      if (user) {
+        Order.find({ofUser: userId}).then(orders => {
           if (orders) {
             let cartId = "";
-
+  
             orders.forEach(order => {
               if (order.status === "CART") {
                 cartId = order._id;
               }
             });
-
+  
             Order.findById({_id: cartId}).then(order => {              
-              
+              //console.log(order);
               if (order) {
                 Item.findById({_id: itemId}).then(item => {
-                  //console.log(item._id);
-                  item.number = number;
-                  
-                  order.total += number * item.price;
-
-                  order.save(err => {
-                    if (err) res.status(402).send();
-                    else res.send(order);
-                  })
-
-                  // if (item.number >= number) {
-                  //   item.number -= number;
-                  //   item.save(err => {
-                  //     if (err) res.status(402).send();
-                  //     else {
+                  if (item.number >= number) {
+                    item.number -= number;
+                    item.save(err => {
+                      if (err) res.status(402).send();
+                      else {
     
-                  //       if (order.items.findIndex(it => it._id.equals(item._id)) != -1) {
-                  //         order.items.filter(it => {
-                  //           if (it._id.equals(item._id)) it.number += number;
-                  //           return it;
-                  //         })
-                  //       } else {
-                  //         item.number = number;
-                  //         order.items.push(item);
-                  //       }
+                        //console.log(order);
+                        if (order.items.findIndex(it => it._id.equals(item._id)) != -1) {
+                          order.items.filter(it => {
+                            if (it._id.equals(item._id)) it.number += number;
+                            return it;
+                          })
+                        } else {
+                          item.number = number;
+                          order.items.push(item);
+                        }
 
-                  //       order.total += number * item.price;
-                  //       // console.log(number+" "+item.price);
+                        order.total += number * item.price;
+                        // console.log(number+" "+item.price);
     
-                  //       order.save(err => {
-                  //         if (err) res.status(402).send();
-                  //         else res.send(order);
-                  //       })
-                  //     }
-                  //   })
-                  // } else res.status(402).send();
+                        order.save(err => {
+                          console.log(err);
+                          if (err) res.status(402).send();
+                          else res.send(order);
+                        })
+                      }
+                    })
+                  } else res.status(402).send();
                 }).catch(next);
               } else res.status(402).send();
             }).catch(next);
             
           } else res.status(402).send();
-        })
+        }).then(next);
+      } else res.status(400).send();
+      
+    }).catch(next);
+  } else {
+    console.log("fb");
+    FBUser.findOne({fbId: userId}).then(user => {
+      console.log(userId);
+      if (user) {
+        Order.find({ofUser: userId}).then(orders => {
+          if (orders) {
+            let cartId = "";
+  
+            orders.forEach(order => {
+              if (order.status === "CART") {
+                cartId = order._id;
+              }
+            });
+  
+            Order.findById({_id: cartId}).then(order => {              
+              
+              if (order) {
+                Item.findById({_id: itemId}).then(item => {
+                  console.log(item._id);
+                  item.number = number;
+                  
+                  order.total += number * item.price;
+  
+                  order.save(err => {
+                    if (err) res.status(402).send();
+                    else res.send(order);
+                  })
+                }).catch(next);
+              } else res.status(402).send();
+            }).catch(next);
+            
+          } else res.status(402).send();
+        }).then(next);
+      } else res.status(400).send();
+      
+    }).catch(next);
+  }
 
-        
-      } else res.status(401).send();
-    } else res.status(400).send();
-  }).catch(next);
 }
 
 const orderController = {

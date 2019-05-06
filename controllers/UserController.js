@@ -33,7 +33,7 @@ const register = (req, res, next) => {
 const login = (req, res, next) => {
   const {type, userId, avatar,name,  username, password} = req.body;
 
-  if (type == "NOR") {
+  if (type == "NORMAL") {
     User.findOne({
       username
     }).then(user => {
