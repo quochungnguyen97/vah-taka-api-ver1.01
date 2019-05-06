@@ -1,4 +1,5 @@
 const User = require('../models/User');
+const FBUser = require('../models/FBUser');
 const Order = require('../models/Order');
 const bcrypt = require('bcrypt');
 
@@ -30,20 +31,44 @@ const register = (req, res, next) => {
 // login controller
 // role: everyone
 const login = (req, res, next) => {
-  //console.log('logged');
-  User.findOne({
-    username: req.body.username
-  }).then(user => {
-    if (user) {
-      if (bcrypt.compareSync(req.body.password, user.password)) {
-        user.password = req.body.password;
+  const {type, userId, avatar,name,  username, password} = req.body;
+
+  if (type == "NOR") {
+    User.findOne({
+      username
+    }).then(user => {
+      if (user) {
+        if (bcrypt.compareSync(password, user.password)) {
+          user.password = password;
+          res.send(user);
+        } else res.status(401).send();
+      }
+      else {
+        res.status(400).send();
+      }
+    }).catch(next);
+  } else {
+    FBUser.findOne({
+      fbId: userId
+    }).then(user => {
+      if (user) {
         res.send(user);
-      } else res.status(401).send();
-    }
-    else {
-      res.status(400).send();
-    }
-  }).catch(next);
+      } else {
+        FBUser.create({
+          fbId: userId,
+          avatar, 
+          name
+        }).then(u => {
+          Order.create({
+            ofUser: u.fbId
+          }).then(() => {
+            res.send(u);
+          }).catch(next);
+        }).catch(next);
+      }
+    }).catch(next);
+  }
+
 }
 
 // delete controller

@@ -6,15 +6,12 @@ const bcrypt = require('bcrypt');
 // order controller
 // role: own user
 const order = (req, res, next) => {
-  const {username, password} = req.body.user;
-  console.log(username);
+  const {userId, type} = req.body;
+  //console.log(username);
 
-  User.findOne({
-    username
-  }).then(user => {
-    if (user) {
-
-      if (bcrypt.compareSync(password, user.password)) {
+  if (type === "NOR") {
+    User.findById({_id: userId}).then(user => {
+      if (user) {
         Order.find({ofUser: user._id}).then(orders => {
 
           if (orders) {
@@ -73,11 +70,72 @@ const order = (req, res, next) => {
           }
           
         }).catch(next);
+      } else res.status(400).send();
+    }).catch(next);
+  } else {
+    FBUser.findOne({fbId: userId}).then(user => {
+      if (user) {
+        Order.find({ofUser: user._id}).then(orders => {
 
-      } else res.status(401).send();
+          if (orders) {
+            let cartId = "";
+            orders.forEach(order => {
+              if (order.status === "CART") {
+                cartId = order._id;
+              }
+            });
 
-    } else res.status(400).send();
-  }).catch(next);
+            Order.findById({_id: cartId}).then(order => {
+              if (order) {
+                if (order.status === "CART") {
+                  order.status = "ORDERED";
+                  if (order.items.length === 0) {
+                    res.status(402).send();
+                  } else {
+
+                    Item.find({}).then(items => {
+                      let check = true;
+                      order.items.forEach(item => {
+                        if (items.find(i => i._id.equals(item._id)).number >= item.number) {
+                          items = items.map(i => {
+                            if (i._id === item._id) {
+                              i.number -= item.number;
+                            }
+                            return i;
+                          })
+                        } else {
+                          check = false;
+                        }                        
+                      });
+
+                      if (check) {
+                        order.save(err => {
+                          if (err) res.status(402).send();
+                          else {
+                            Order.create({
+                              ofUser: user._id
+                            }).then(ord => {
+                              if (ord) {
+                                items.save(err => {
+                                  if (err) res.status(402).send();
+                                  else res.send(order);
+                                })
+                              } else res.status(402).send();
+                            }).catch(next);
+                          }
+                        });
+                      } else res.status(402).send();
+                    }).catch(next);                    
+                  }   
+                } else res.status(402).send();
+              } else res.status(402).send();
+            }).catch(next);
+          }
+          
+        }).catch(next);
+      } else res.status(400).send();
+    }).catch(next);
+  }
 }
 
 // get cart of user
