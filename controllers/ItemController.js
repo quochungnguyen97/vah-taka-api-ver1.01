@@ -1,6 +1,7 @@
 const Item = require('../models/Item').Item;
 const User = require('../models/User');
 const Order = require('../models/Order');
+const Category = require('../models/Category').Category;
 const bcrypt = require('bcrypt');
 
 // get best selling
@@ -48,6 +49,14 @@ const bestSelling = (req, res, next) => {
     res.send(sendItems);
   }).catch(next);
 } 
+
+// get categories
+const getCategories = (req, res, next) => {
+  Category.find({}).then(categories => {
+    if (categories) res.send(categories);
+    else res.status(400).send();
+  }).catch(next);
+}
 
 // new items
 // role: everyone
@@ -183,7 +192,8 @@ const itemController = {
   _delete,
   bestSelling,
   getByType,
-  newItems
+  newItems,
+  getCategories
 };
 
 module.exports = itemController;

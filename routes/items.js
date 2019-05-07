@@ -53,4 +53,9 @@ router.get('/new_items/:num', (req, res, next) => {
   itemController.newItems(req, res, next);
 })
 
+// get categories
+router.get('/categories', (req, res, next) => {
+  itemController.getCategories(req, res, next);
+})
+
 module.exports = router;
