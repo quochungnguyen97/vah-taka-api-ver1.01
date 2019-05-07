@@ -11,7 +11,7 @@ router.post('/order', (req, res, next) => {
 
 // get all orders
 // role: Ad
-router.post('/', (req, res, next) => {
+router.post('/get_all', (req, res, next) => {
   orderController.getAll(req, res, next);
 })
 

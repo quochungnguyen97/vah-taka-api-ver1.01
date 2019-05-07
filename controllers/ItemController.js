@@ -166,6 +166,7 @@ const update = (req, res, next) => {
 const _delete = (req, res, next) => {
   const {username, password} = req.body;
 
+  console.log(username);
   User.findOne({
     username
   }).then(user => {
@@ -174,6 +175,7 @@ const _delete = (req, res, next) => {
         Item.findByIdAndRemove({
           _id: req.params.id
         }).then(item => {
+          console.log(item);
           if (item) {
             res.send(item);
           } else res.status(400).send();
