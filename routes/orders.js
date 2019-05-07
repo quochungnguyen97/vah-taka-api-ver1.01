@@ -30,7 +30,7 @@ router.delete('/:id', (req, res, next) => {
 // mark done
 // role: Ad
 router.put('/:id', (req, res, next) => {
-  orderController.checked(req, res, next);
+  orderController.update(req, res, next);
 })
 
 // create cart
@@ -47,7 +47,7 @@ router.post('/add_to_cart', (req, res, next) => {
 
 // get orders of user
 // role: ad, own user
-router.post('/of_user/:id', (req, res, next) => {
+router.post('/of_user', (req, res, next) => {
   orderController.getOrdersOfUser(req, res, next);
 })
 

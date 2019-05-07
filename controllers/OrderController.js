@@ -294,28 +294,33 @@ const getAll = (req, res, next) => {
 // get orders of user
 // role: own user, Ad
 const getOrdersOfUser = (req, res, next) => {
-  const userId = req.params.id;
-  const {username, password} = req.body.user;
+  const {userId, type} = req.body;
 
-  User.findOne({
-    username
-  }).then(user => {
-    if (user) {
-      if (bcrypt.compareSync(password, user.password)){
-        if (user.role === "Ad" || user._id.equals(userId)) {
-          Order.find({ofUser: userId}).then(orders => {
-            if (orders) {
-              res.send(orders);
-            } else res.status(402).send();
-          }).catch(next);
-        } else res.status(401).send();
-      } else res.status(401).send();
-    } else res.status(400).send();
-  }).catch(next);
+  if (type === "NORMAL") {
+    User.findById({_id: userId}).then(user => {
+      if (user) {
+        Order.find({ofUser: userId}).then(orders => {
+          if (orders) {
+            res.send(orders);
+          } else res.status(401).send();
+        }).catch(next);
+      } else res.status(400).send();
+    }).catch(next);
+  } else {
+    FBUser.findOne({fbId: userId}).then(user => {
+      if (user) {
+        Order.find({ofUser: userId}).then(orders => {
+          if (orders) {
+            res.send(orders);
+          } else res.status(401).send();
+        }).catch(next);
+      } else res.status(400).send();
+    }).catch(next);
+  }
 }
 
 // get order by id controller
-// role: own user, Ad
+// role: Ad
 const get = (req, res, next) => {
   const {username, password} = req.body.user;
 
@@ -325,7 +330,7 @@ const get = (req, res, next) => {
       if (bcrypt.compareSync(password, user.password) ){
         Order.findById({_id: req.params.id}).then(order => {
           if (order) {
-            if (user.role === "Ad" || user._id.equals(order.ofUser)){
+            if (user.role === "Ad"){
               res.send(order);
             } else res.status(402).send();
             
@@ -358,26 +363,22 @@ const _delete = (req, res, next) => {
 
 // mark done controller
 // role: Ad
-const checked = (req, res, next) => {
+const update = (req, res, next) => {
   const {username, password} = req.body.user;
+  const {order} = req.body;
+
+  delete order.items;
 
   User.findOne({username}).then(user => {
     if (user) {
       if (bcrypt.compareSync(password, user.password) && user.role == "Ad" ) {
-
-        Order.findById({_id: req.params.id}).then(o => {
-          if (o) {
-            if (o.status === "ORDERED") {
-              Order.findByIdAndUpdate({_id: req.params.id}, {status: "CHECKED"}).then(order => {
-                if (order) {
-                  res.send(order);
-                } else res.status(402).send();
-              }).catch(next);
-            } else res.status(402).send();
-            
+        Order.findOneAndUpdate({_id: req.params.id}, order).then((oldOrder) => {
+          if (oldOrder) {            
+            Order.findById({_id: req.params.id}).then((newOrder) => {
+              res.send(newOrder);
+            }).catch(next);
           } else res.status(402).send();
         }).catch(next);
-        
       } else res.status(401).send();
     } else res.status(400).send();
   }).catch(next);
@@ -543,7 +544,7 @@ const orderController = {
   getAll,
   get,
   _delete,
-  checked, 
+  update, 
   addToCart,
   createCart,
   getOrdersOfUser,

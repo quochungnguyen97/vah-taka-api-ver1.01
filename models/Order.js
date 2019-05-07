@@ -32,7 +32,7 @@ const OrderSchema = new Schema({
   payment: {
     type: String
   },
-  status: {   // CART - ORDERED - CHECKED
+  status: {   // CART - ORDERED - CHECKED - SHIPPING - DONE
     type: String,
     default: "CART"
   }
