@@ -62,4 +62,9 @@ router.put('/delete_from_cart/:itemId', (req, res, next) => {
   orderController.deleteItemFromCart(req, res, next);
 })
 
+// get cart of user
+router.post('/order_of_user/:id', (req, res, next) => {
+  orderController.getCus(req, res, next);
+})
+
 module.exports = router;

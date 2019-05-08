@@ -342,6 +342,27 @@ const get = (req, res, next) => {
   }).catch(next);
 }
 
+// get order by id
+// role: own user
+const getCus = (req, res, next) => {
+  const {userId, type} = req.body;
+  const orderId = req.params.id;
+
+  Order.findById({_id: orderId}).then(order => {
+    if (type === "NORMAL") {
+      User.findById({_id: userId}).then(user => {
+        if (order.ofUser === userId) res.send(order);
+        else res.status(400).send();
+      }).catch(next);
+    } else {
+      FBUser.findOne({fbId: userId}).then(user => {
+        if (order.ofUser === userId) res.send(order);
+        else res.status(400).send();
+      }).catch(next);
+    }
+  }).catch(next);
+}
+
 // delete order
 // role: Ad
 const _delete = (req, res, next) => {
@@ -549,7 +570,8 @@ const orderController = {
   createCart,
   getOrdersOfUser,
   getCart,
-  deleteItemFromCart
+  deleteItemFromCart,
+  getCus
 };
 
 module.exports = orderController;
